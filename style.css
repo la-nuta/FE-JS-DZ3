@@ -30,7 +30,6 @@ body{
     border: solid 2px #000000;
     line-height: 25px;
     font-weight: bold;
-
 }
 #textInput1:focus, #textInput2:focus {
     outline: none;
@@ -60,8 +59,10 @@ body{
     padding: 5px;
 }
 #autoCompleteContainer{
-    position: absolute;
     border: none;
+    padding: 5px;
+    width: 206px;
+    color: darkgrey;
 }
 #autoCompleteContainer:focus{
     outline: none;

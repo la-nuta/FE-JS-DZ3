@@ -1,8 +1,9 @@
 (function () {
     'use strict';
 
-    let allTags1 = new Set(),
-        allTags2 = new Set();
+    let allTagsZone1 = new Set(),
+        allTagsForAutoComplete = new Set(),
+        allTagsZone2 = new Set();
 
     createElements(1, 2);
     addContainers();
@@ -38,8 +39,19 @@
             autoCompleteContainer = document.createElement('select');
         zone2.appendChild(autoCompleteContainer);
         autoCompleteContainer.id = 'autoCompleteContainer';
-        autoCompleteContainer.size = allTags1.size;
         autoCompleteContainer.multiple = 'multiple';
+    }
+
+    function sortTags() {
+        let sorted = [...allTagsZone1.keys()].sort(alphabetOrder),
+            container1 = document.getElementById('container1');
+
+        for (let i = 0; i < sorted.length; i++) {
+            let tag = document.createElement('span');
+            container1.appendChild(tag);
+            tag.classList.add('tags');
+            tag.textContent = sorted[i];
+        }
     }
 
     function alphabetOrder(a, b) {
@@ -49,72 +61,60 @@
         else if (aCode > bCode) return 1;
     }
 
-
     document.body.addEventListener('change', function (event) {
         let target = event.target,
             container1 = document.getElementById('container1'),
             textInput1 = document.getElementById('textInput1');
 
-        if (target === textInput1 && !allTags1.has(target.value)) {
+        if (target === textInput1 && !allTagsZone1.has(target.value)) {
             let tagName = target.value;
             container1.textContent = '';
-            allTags1.add(tagName);
-
-            let sorted = [...allTags1.keys()].sort(alphabetOrder);
-
-            for (let i = 0; i < sorted.length; i++) {
-                let tag = document.createElement('span');
-                container1.appendChild(tag);
-                tag.classList.add('tags');
-                tag.textContent = sorted[i];
-            }
-
+            allTagsZone1.add(tagName);
+            sortTags();
             target.value = '';
         }
 
-        else if (target && allTags1.has(target.value)) {
+        else if (target && allTagsZone1.has(target.value)) {
             target.value = '';
         }
     });
-
 
     document.body.addEventListener('click', function (event) {
         let target = event.target,
             targetTag = target.classList.contains('tags'),
             container1 = document.getElementById('container1'),
             container2 = document.getElementById('container2'),
+            textInput2 = document.getElementById('textInput2'),
             autoCompleteContainer = document.getElementById('autoCompleteContainer');
 
         if (targetTag) {
             target.remove();
-            allTags1.delete(target.textContent);
+            allTagsZone1.delete(target.textContent);
+            allTagsZone2.delete(target.textContent);
         }
 
-        else if (target.classList.contains('auto-complete')) {
+        else if (target.classList.contains('auto-complete') && !allTagsZone2.has(target.value)) {
 
-            let tagName = target.value;
+            let tagName = target.value,
+                tag = document.createElement('span');
+
             autoCompleteContainer.textContent = '';
-            allTags1.delete(tagName);
-
-
-            let tag = document.createElement('span');
+            allTagsZone1.delete(tagName);
             container2.appendChild(tag);
             tag.classList.add('tags');
             tag.textContent = tagName;
             target.value = '';
-
+            textInput2.value = '';
             container1.textContent = '';
-            let sorted = [...allTags1.keys()].sort(alphabetOrder);
+            sortTags();
+            allTagsZone2.add(tagName);
+        }
 
-            for (let i = 0; i < sorted.length; i++) {
-                let tag = document.createElement('span');
-                container1.appendChild(tag);
-                tag.classList.add('tags');
-                tag.textContent = sorted[i];
-            }
+        else if (target.classList.contains('auto-complete') && !allTagsZone2.has(target.value)) {
+            autoCompleteContainer.textContent = '';
+            textInput2.value = '';
         }
     });
-
 
     document.body.addEventListener('input', function (event) {
         let target = event.target,
@@ -124,54 +124,46 @@
         if (target === textInput2 && target.value) {
             autoCompleteContainer.textContent = '';
 
-            for (let key of allTags1.keys()) {
+            for (let key of allTagsZone1.keys()) {
                 if (key.indexOf(textInput2.value.toLowerCase()) + 1 || key.indexOf(textInput2.value.toUpperCase()) + 1) {
-
                     let autoCompleteTag = document.createElement('option');
                     autoCompleteTag.textContent = key;
                     autoCompleteContainer.appendChild(autoCompleteTag);
                     autoCompleteTag.classList.add('auto-complete');
-                    allTags2.add(key);
+                    allTagsForAutoComplete.add(key);
                 }
             }
+            autoCompleteContainer.size = allTagsForAutoComplete.size;
+            allTagsForAutoComplete.clear();
         }
         else if (target === textInput2 && !target.value) {
             autoCompleteContainer.textContent = '';
         }
     });
 
-
     document.body.addEventListener('keydown', function (event) {
         let target = event.target,
+            tagName = target.value,
             container1 = document.getElementById('container1'),
             container2 = document.getElementById('container2'),
             textInput2 = document.getElementById('textInput2'),
-            autoCompleteContainer = document.getElementById('autoCompleteContainer');
+            autoCompleteContainer = document.getElementById('autoCompleteContainer'),
+            tag = document.createElement('span');
 
-        if (target === textInput2 && event.keyCode === 13) {
-            let tagName = target.value;
+        if (target === textInput2 && event.keyCode === 13 && !allTagsZone2.has(target.value)) {
             autoCompleteContainer.textContent = '';
-            allTags1.delete(tagName);
-
-
-            let tag = document.createElement('span');
+            allTagsZone1.delete(tagName);
             container2.appendChild(tag);
             tag.classList.add('tags');
             tag.textContent = tagName;
             target.value = '';
-
-
             container1.textContent = '';
-            let sorted = [...allTags1.keys()].sort(alphabetOrder);
-
-            for (let i = 0; i < sorted.length; i++) {
-                let tag = document.createElement('span');
-                container1.appendChild(tag);
-                tag.classList.add('tags');
-                tag.textContent = sorted[i];
-            }
+            sortTags();
+            allTagsZone2.add(tagName);
+        }
+        else if (target === textInput2 && event.keyCode === 13 && allTagsZone2.has(target.value)) {
+            autoCompleteContainer.textContent = '';
+            target.value = '';
         }
     });
-
-
 }());
